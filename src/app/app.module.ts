@@ -1,10 +1,17 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import {
+  CacheConfig,
+  Configuration,
+  TypeormConfig,
+  WinstonConfig,
+} from './config';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    Configuration.register(),
+    TypeormConfig.register(),
+    CacheConfig.register(),
+    WinstonConfig.register(),
+  ],
 })
 export class AppModule {}

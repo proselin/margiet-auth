@@ -9,18 +9,21 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "webpack-cli build",
-        "args": [
-          "node-env=production"
-        ]
+        "command": "webpack-cli build"
       },
       "configurations": {
         "development": {
           "args": [
             "node-env=development"
           ]
+        },
+        "production": {
+          "args": [
+            "node-env=production"
+          ]
         }
-      }
+      },
+      "defaultConfiguration": "development"
     },
     "serve": {
       "executor": "@nx/js:node",
@@ -37,7 +40,8 @@
           "buildTarget": "mariget-auth:build:development"
         },
         "production": {
-          "buildTarget": "mariget-auth:build:production"
+          "buildTarget": "mariget-auth:build:production",
+          "watch": false
         }
       }
     },
