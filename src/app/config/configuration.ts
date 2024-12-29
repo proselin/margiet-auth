@@ -3,6 +3,7 @@ import { NodeEnv } from '../common/enums';
 import { defaultVariables } from '../common/constant/app';
 import * as fs from 'node:fs';
 import { ConfigModule } from '@nestjs/config';
+import { IConfiguration } from './types';
 
 export abstract class Configuration {
   public static validatingSchema(
@@ -73,46 +74,44 @@ export abstract class Configuration {
     return schema.parse(config);
   }
 
-  public static parseEnv(
-    config: Record<string, unknown>
-  ): Record<string, unknown> {
+  public static parseEnv(config: Record<string, unknown>): IConfiguration {
     return {
-      environment: config.NODE_ENV,
+      environment: <NodeEnv>config.NODE_ENV,
       isProduction: config.NODE_ENV === NodeEnv.Production,
       isDevelopment: config.NODE_ENV === NodeEnv.Development,
       isTesting: config.NODE_ENV === NodeEnv.Test,
 
       swagger: {
-        enable: config.SWAGGER_ENABLE,
-        path: config.SWAGGER_PATH,
+        enable: <boolean>config.SWAGGER_ENABLE,
+        path: <string>config.SWAGGER_PATH,
       },
 
       app: {
-        host: config.HOST,
-        port: config.PORT,
-        apiPrefix: config.API_PREFIX,
+        host: <string>config.HOST,
+        port: <number>config.PORT,
+        apiPrefix: <string>config.API_PREFI,
       },
 
       redis: {
-        host: config.REDIS_HOST,
-        port: config.REDIS_PORT,
-        username: config.REDIS_USERNAME,
-        password: config.REDIS_PASSWORD,
+        host: <string>config.REDIS_HOST,
+        port: <number>config.REDIS_PORT,
+        username: <string>config.REDIS_USERNAME,
+        password: <string>config.REDIS_PASSWORD,
       },
 
       database: {
-        username: config.DATABASE_USERNAME,
-        password: config.DATABASE_PASSWORD,
-        name: config.DATABASE_NAME,
-        uri: config.DATABASE_URI,
+        username: <string>config.DATABASE_USERNAME,
+        password: <string>config.DATABASE_PASSWORD,
+        name: <string>config.DATABASE_NAME,
+        uri: <string>config.DATABASE_UR,
       },
 
       jwt: {
-        secretPath: config.JWT_SECRET_PATH,
+        secretPath: <string>config.JWT_SECRET_PATH,
         secret: fs.readFileSync(<string>config.JWT_SECRET_PATH, 'utf8'),
-        expirationTime: config.JWT_EXPIRATION_TIME,
-        publicKeyPath: config.JWT_PUBLIC_KEY_PATH,
-        privateKeyPath: config.JWT_PRIVATE_KEY_PATH,
+        expirationTime: <string>config.JWT_EXPIRATION_TIME,
+        publicKeyPath: <string>config.JWT_PUBLIC_KEY_PATH,
+        privateKeyPath: <string>config.JWT_PRIVATE_KEY_PATH,
         publicKey: fs.readFileSync(<string>config.JWT_PUBLIC_KEY_PATH, 'utf8'),
         privateKey: fs.readFileSync(
           <string>config.JWT_PRIVATE_KEY_PATH,
@@ -121,11 +120,11 @@ export abstract class Configuration {
       },
 
       cache: {
-        ttl: config.CACHE_TTL,
-        max: config.CACHE_MAX,
-        refreshThreshold: config.CACHE_REFRESH_THRESHOLD,
+        ttl: <number>config.CACHE_TTL,
+        max: <number>config.CACHE_MAX,
+        refreshThreshold: <number>config.CACHE_REFRESH_THRESHOLD,
       },
-    };
+    } satisfies IConfiguration;
   }
 
   public static register() {
