@@ -1,6 +1,14 @@
 {
   "name": "@mariget-auth/source",
-  "version": "0.0.0",
+  "description": "Authentication servie for margiet group made by nestjs",
+  "author": "Hung Nguyen Quoc (proselin)",
+  "keywords": [
+    "typescript",
+    "nestjs",
+    "oauth",
+    "oauth2"
+  ],
+  "version": "0.0.1",
   "license": "MIT",
   "scripts": {
     "start": "nx serve",
@@ -24,6 +32,7 @@
     "cookie-parser": "^1.4.7",
     "date-fns": "^4.1.0",
     "express-session": "^1.18.1",
+    "figlet": "^1.8.0",
     "hbs": "^4.2.0",
     "keyv": "^5.2.3",
     "lodash": "^4.17.21",
@@ -53,6 +62,7 @@
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
     "@types/cookie-parser": "^1.4.8",
+    "@types/figlet": "^1.7.0",
     "@types/jest": "^29.5.12",
     "@types/joi": "^17.2.2",
     "@types/node": "~18.16.9",
