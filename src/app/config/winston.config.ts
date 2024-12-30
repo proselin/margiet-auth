@@ -4,27 +4,29 @@ import {
   WinstonModule,
 } from 'nest-winston';
 import { NodeEnv } from '../common/enums';
+import { ConfigService } from '@nestjs/config';
 
 export abstract class WinstonConfig {
   static register() {
     return WinstonModule.forRootAsync({
-      useFactory: () => {
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
         if (process.env.NODE_ENV === NodeEnv.Production) {
           return this.registerProduction();
         }
-        return this.registerDevelopment();
+        return this.registerDevelopment(configService.get('app.name'));
       },
     });
   }
 
-  static registerDevelopment() {
+  static registerDevelopment(name?: string) {
     return {
       transports: [
         new winston.transports.Console({
           debugStdout: true,
           format: winston.format.combine(
             winston.format.timestamp(),
-            nestWinstonModuleUtilities.format.nestLike('Margiet Auth', {
+            nestWinstonModuleUtilities.format.nestLike(name, {
               colors: true,
               prettyPrint: true,
               processId: true,

@@ -16,10 +16,10 @@ export abstract class Configuration {
     ]);
 
     const appConfig = {
-      HOST: z.string().default(defaultVariables.host),
-      PORT: z.coerce.number().default(defaultVariables.port),
-      API_PREFIX: z.string().default(defaultVariables.apiPrefix),
-      APP_ID: z.string().uuid().default(defaultVariables.appId),
+      HOST: z.string().default(defaultVariables.app.host),
+      PORT: z.coerce.number().default(defaultVariables.app.port),
+      API_PREFIX: z.string().default(defaultVariables.app.apiPrefix),
+      APP_ID: z.string().uuid().default(defaultVariables.app.appId),
     };
 
     const swaggerConfig = {
@@ -51,6 +51,7 @@ export abstract class Configuration {
       JWT_EXPIRATION_TIME: z.string(),
       JWT_PUBLIC_KEY_PATH: z.string(),
       JWT_PRIVATE_KEY_PATH: z.string(),
+      JWT_ISSUER: z.string().optional(),
     };
 
     const cacheConfig = {
@@ -71,11 +72,11 @@ export abstract class Configuration {
       ...cacheConfig,
     });
 
-    return schema.parse(config);
+    return Object.seal(schema.parse(config));
   }
 
   public static parseEnv(config: Record<string, unknown>): IConfiguration {
-    return {
+    return Object.freeze({
       environment: <NodeEnv>config.NODE_ENV,
       isProduction: config.NODE_ENV === NodeEnv.Production,
       isDevelopment: config.NODE_ENV === NodeEnv.Development,
@@ -87,9 +88,10 @@ export abstract class Configuration {
       },
 
       app: {
+        name: 'MargietAuth',
         host: <string>config.HOST,
         port: <number>config.PORT,
-        apiPrefix: <string>config.API_PREFI,
+        apiPrefix: <string>config.API_PREFIX,
       },
 
       redis: {
@@ -117,6 +119,7 @@ export abstract class Configuration {
           <string>config.JWT_PRIVATE_KEY_PATH,
           'utf8'
         ),
+        issuer: <string>config.JWT_ISSUER ?? <string>config.APP_I,
       },
 
       cache: {
@@ -124,7 +127,7 @@ export abstract class Configuration {
         max: <number>config.CACHE_MAX,
         refreshThreshold: <number>config.CACHE_REFRESH_THRESHOLD,
       },
-    } satisfies IConfiguration;
+    }) satisfies IConfiguration;
   }
 
   public static register() {

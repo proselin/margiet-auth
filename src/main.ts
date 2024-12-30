@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { ConfigService } from '@nestjs/config';
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { SwaggerConfig } from './app/config/swagger.config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import * as fs from 'node:fs';
@@ -20,7 +20,9 @@ class App {
   public static async main() {
     App.figlet();
 
-    const app = await NestFactory.create(AppModule);
+    const app = await NestFactory.create(AppModule, {
+      bufferLogs: true,
+    });
 
     const config = app.get<ConfigService>(ConfigService);
     const port = config.get<number>('app.port');
@@ -30,14 +32,14 @@ class App {
     const swaggerEnable = config.get<boolean>('swagger.enable');
 
     app.setGlobalPrefix(apiPrefix);
-    app.useGlobalPipes(
-      new ValidationPipe({ transform: true, whitelist: true })
-    );
     app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+    app.enableShutdownHooks();
 
     if (swaggerEnable) {
       SwaggerConfig.setup(app, swaggerPath);
     }
+
+    await app.init();
 
     await app.listen(port, host, () => {
       Logger.log(`Server is running on http://${host}:${port}`);

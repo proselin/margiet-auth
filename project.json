@@ -33,7 +33,8 @@
       ],
       "options": {
         "buildTarget": "mariget-auth:build",
-        "runBuildTargetDependencies": false
+        "runBuildTargetDependencies": false,
+        "watch": false
       },
       "configurations": {
         "development": {
