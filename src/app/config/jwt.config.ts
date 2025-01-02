@@ -9,16 +9,15 @@ export class JwtConfig {
       useFactory: async (configService: ConfigService) => {
         return {
           global: true,
-          secret: configService.get<string>('jwt.secret'),
-          privateKey: configService.get<string>('jwt.privateKey'),
-          publicKey: configService.get<string>('jwt.publicKey'),
           verifyOptions: {
             algorithms: ['RS256'],
+            audience: new RegExp(configService.get<string>('jwt.audience')),
             issuer: configService.get<string>('jwt.issuer'),
-            maxAge: configService.get<string>('jwt.expirationTime'),
           },
           signOptions: {
+            algorithm: 'RS256',
             issuer: configService.get<string>('jwt.issuer'),
+            audience: configService.get<string>('jwt.audience'),
             expiresIn: configService.get<string>('jwt.expirationTime'),
             mutatePayload: false,
           },

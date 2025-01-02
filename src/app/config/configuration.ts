@@ -4,6 +4,7 @@ import { defaultVariables } from '../common/constant/app';
 import * as fs from 'node:fs';
 import { ConfigModule } from '@nestjs/config';
 import { IConfiguration } from './types';
+import { TokenType } from '../ma-jwt/constant/token-type';
 
 export abstract class Configuration {
   public static validatingSchema(
@@ -20,6 +21,7 @@ export abstract class Configuration {
       PORT: z.coerce.number().default(defaultVariables.app.port),
       API_PREFIX: z.string().default(defaultVariables.app.apiPrefix),
       APP_ID: z.string().uuid().default(defaultVariables.app.appId),
+      DOMAIN: z.string().default(defaultVariables.app.domain),
     };
 
     const swaggerConfig = {
@@ -37,21 +39,47 @@ export abstract class Configuration {
     };
 
     const databaseConfig = {
-      DATABASE_USERNAME: z.string().optional(),
-      DATABASE_PASSWORD: z.string().optional(),
-      DATABASE_NAME: z
-        .string()
-        .optional()
-        .default(defaultVariables.database.name),
       DATABASE_URI: z.string().default(defaultVariables.database.uri),
     };
 
     const jwtConfig = {
       JWT_SECRET_PATH: z.string(),
       JWT_EXPIRATION_TIME: z.string(),
-      JWT_PUBLIC_KEY_PATH: z.string(),
-      JWT_PRIVATE_KEY_PATH: z.string(),
-      JWT_ISSUER: z.string().optional(),
+      JWT_ISSUER: z
+        .string()
+        .default(process.env.APP_ID)
+        .describe('Take APP_ID if no provide JWT_ISSUER'),
+
+      //AccessToken config
+      JWT_ACCESS_TOKEN_PUBLIC_KEY_PATH: z.string(),
+      JWT_ACCESS_TOKEN_PRIVATE_KEY_PATH: z.string(),
+      JWT_ACCESS_TOKEN_EXPIRATION_TIME: z
+        .string()
+        .default(process.env.JWT_EXPIRATION_TIME),
+
+      // Refresh token
+      JWT_REFRESH_TOKEN_SECRET_PATH: z
+        .string()
+        .default(process.env.JWT_SECRET_PATH),
+      JWT_REFRESH_TOKEN_EXPIRATION_TIME: z
+        .string()
+        .default(process.env.JWT_EXPIRATION_TIME),
+
+      //Confirmation
+      JWT_CONFIRMATION_TOKEN_SECRET_PATH: z
+        .string()
+        .default(process.env.JWT_SECRET_PATH),
+      JWT_CONFIRMATION_TOKEN_EXPIRATION_TIME: z
+        .string()
+        .default(process.env.JWT_EXPIRATION_TIME),
+
+      //ResetPassword
+      JWT_RESET_PASSWORD_TOKEN_SECRET_PATH: z
+        .string()
+        .default(process.env.JWT_SECRET_PATH),
+      JWT_RESET_PASSWORD_TOKEN_EXPIRATION_TIME: z
+        .string()
+        .default(process.env.JWT_EXPIRATION_TIME),
     };
 
     const cacheConfig = {
@@ -62,6 +90,11 @@ export abstract class Configuration {
       CACHE_MAX: z.coerce.number().default(defaultVariables.cache.max),
     };
 
+    const cookieConfig = {
+      REFRESH_COOKIE_NAME: z.string(),
+      COOKIE_SECRET_PATH: z.string(),
+    };
+
     const schema = z.object({
       NODE_ENV,
       ...appConfig,
@@ -70,6 +103,7 @@ export abstract class Configuration {
       ...swaggerConfig,
       ...jwtConfig,
       ...cacheConfig,
+      ...cookieConfig,
     });
 
     return Object.seal(schema.parse(config));
@@ -85,6 +119,7 @@ export abstract class Configuration {
       swagger: {
         enable: <boolean>config.SWAGGER_ENABLE,
         path: <string>config.SWAGGER_PATH,
+        scalarPath: '/reference'
       },
 
       app: {
@@ -92,6 +127,7 @@ export abstract class Configuration {
         host: <string>config.HOST,
         port: <number>config.PORT,
         apiPrefix: <string>config.API_PREFIX,
+        domain: <string>config.DOMAIN,
       },
 
       redis: {
@@ -102,24 +138,55 @@ export abstract class Configuration {
       },
 
       database: {
-        username: <string>config.DATABASE_USERNAME,
-        password: <string>config.DATABASE_PASSWORD,
-        name: <string>config.DATABASE_NAME,
-        uri: <string>config.DATABASE_UR,
+        uri: <string>config.DATABASE_URI,
       },
 
       jwt: {
-        secretPath: <string>config.JWT_SECRET_PATH,
         secret: fs.readFileSync(<string>config.JWT_SECRET_PATH, 'utf8'),
         expirationTime: <string>config.JWT_EXPIRATION_TIME,
-        publicKeyPath: <string>config.JWT_PUBLIC_KEY_PATH,
-        privateKeyPath: <string>config.JWT_PRIVATE_KEY_PATH,
-        publicKey: fs.readFileSync(<string>config.JWT_PUBLIC_KEY_PATH, 'utf8'),
-        privateKey: fs.readFileSync(
-          <string>config.JWT_PRIVATE_KEY_PATH,
-          'utf8'
-        ),
-        issuer: <string>config.JWT_ISSUER ?? <string>config.APP_I,
+        issuer: <string>config.JWT_ISSUER,
+        audience: <string>config.DOMAIN,
+
+        [TokenType.ACCESS]: {
+          publicKey: fs.readFileSync(
+            <string>config.JWT_ACCESS_TOKEN_PUBLIC_KEY_PATH,
+            'utf8'
+          ),
+          privateKey: fs.readFileSync(
+            <string>config.JWT_ACCESS_TOKEN_PRIVATE_KEY_PATH,
+            'utf8'
+          ),
+          time: <string>config.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
+        },
+
+        [TokenType.REFRESH]: {
+          secret: fs.readFileSync(
+            <string>config.JWT_REFRESH_TOKEN_SECRET_PATH,
+            'utf-8'
+          ),
+          time: <string>config.JWT_REFRESH_TOKEN_EXPIRATION_TIME,
+        },
+
+        [TokenType.CONFIRMATION]: {
+          secret: fs.readFileSync(
+            <string>config.JWT_CONFIRMATION_TOKEN_SECRET_PATH,
+            'utf8'
+          ),
+          time: <string>config.JWT_CONFIRMATION_TOKEN_EXPIRATION_TIME,
+        },
+
+        [TokenType.RESET_PASSWORD]: {
+          secret: fs.readFileSync(
+            <string>config.JWT_RESET_PASSWORD_TOKEN_SECRET_PATH,
+            'utf-8'
+          ),
+          time: <string>config.JWT_RESET_PASSWORD_TOKEN_EXPIRATION_TIME,
+        },
+      },
+
+      cookie: {
+        refreshCookieName: <string>config.REFRESH_COOKIE_NAME,
+        secret: fs.readFileSync(<string>config.COOKIE_SECRET_PATH, 'utf-8'),
       },
 
       cache: {
@@ -133,9 +200,8 @@ export abstract class Configuration {
   public static register() {
     return ConfigModule.forRoot({
       isGlobal: true,
-      validate: (config) => {
-        return Configuration.parseEnv(Configuration.validatingSchema(config));
-      },
+      validate: (config) =>
+        Configuration.parseEnv(Configuration.validatingSchema(config)),
     });
   }
 }

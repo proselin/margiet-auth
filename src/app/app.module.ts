@@ -1,17 +1,28 @@
-import { MiddlewareConsumer, Module, NestModule, ValidationPipe } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  ValidationPipe,
+} from '@nestjs/common';
 
-import { CacheConfig, Configuration, TypeOrmConfig, WinstonConfig } from './config';
+import {
+  CacheConfig,
+  Configuration,
+  TypeOrmConfig,
+  WinstonConfig,
+} from './config';
 import {
   HelmetMiddleware,
   PassportInitializeMiddleware,
   PassportSessionMiddleware,
-  RequestIdMiddleware
+  RequestIdMiddleware,
 } from './common/middlewares';
-import { AppController } from './app.controller';
 import { JwtConfig } from './config/jwt.config';
-import { JwtAdapterModule } from './jwt-adapter';
 import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { LoggingInterceptor } from './common/interceptors';
+import { AuthModule } from './auth';
+import { CookieParserMiddleware } from './common/middlewares/cookie-parser.middleware';
+import { UserModule } from './user';
 
 @Module({
   imports: [
@@ -20,7 +31,8 @@ import { LoggingInterceptor } from './common/interceptors';
     CacheConfig.register(),
     WinstonConfig.register(),
     JwtConfig.register(),
-    JwtAdapterModule,
+    UserModule,
+    AuthModule,
   ],
   providers: [
     {
@@ -32,7 +44,6 @@ import { LoggingInterceptor } from './common/interceptors';
       useValue: new ValidationPipe({ transform: true, whitelist: true }),
     },
   ],
-  controllers: [AppController]
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
@@ -41,7 +52,8 @@ export class AppModule implements NestModule {
         HelmetMiddleware,
         RequestIdMiddleware,
         PassportInitializeMiddleware,
-        PassportSessionMiddleware
+        PassportSessionMiddleware,
+        CookieParserMiddleware,
       )
       .forRoutes('*');
   }

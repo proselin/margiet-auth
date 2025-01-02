@@ -7,12 +7,13 @@ export abstract class CacheConfig {
   static register() {
     return CacheModule.registerAsync({
       inject: [ConfigService],
+      isGlobal: true,
       useFactory: (config: ConfigService) => {
         const keyv = new Keyv(
           new KeyvRedis({
-            url: `redis://${config.get<string>(
-              'redis.host'
-            )}:${config.get<string>('redis.port')}`,
+            url: `redis://${config.get('redis.host')}:${config.get(
+              'redis.port'
+            )}`,
             username: config.get<string>('redis.username'),
             password: config.get<string>('redis.password'),
           })

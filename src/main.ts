@@ -7,6 +7,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import * as fs from 'node:fs';
 import path from 'node:path';
 import figlet from 'figlet';
+import { ISwaggerConfiguration } from './app/config/types';
 
 class App {
   static figlet() {
@@ -28,24 +29,26 @@ class App {
     const port = config.get<number>('app.port');
     const host = config.get<string>('app.host');
     const apiPrefix = config.get<string>('app.apiPrefix');
-    const swaggerPath = config.get<string>('swagger.path');
-    const swaggerEnable = config.get<boolean>('swagger.enable');
+    const swaggerConfig: ISwaggerConfiguration = config.get<ISwaggerConfiguration>("swagger");
 
     app.setGlobalPrefix(apiPrefix);
     app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
     app.enableShutdownHooks();
 
-    if (swaggerEnable) {
-      SwaggerConfig.setup(app, swaggerPath);
+    if (swaggerConfig.enable) {
+      SwaggerConfig.setup(app, swaggerConfig);
     }
 
     await app.init();
 
     await app.listen(port, host, () => {
       Logger.log(`Server is running on http://${host}:${port}`);
-      if (swaggerEnable) {
+      if (swaggerConfig.enable) {
         Logger.log(
-          `Swagger is running on http://${host}:${port}${swaggerPath}`
+          `Swagger is running on http://${host}:${port}${swaggerConfig.path}`
+        );
+        Logger.log(
+          `Scalar is running on http://${host}:${port}${swaggerConfig.scalarPath}`
         );
       } else {
         Logger.warn(`Swagger is disabled`);

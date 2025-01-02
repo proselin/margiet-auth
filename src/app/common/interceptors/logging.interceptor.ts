@@ -14,17 +14,17 @@ export class LoggingInterceptor implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler<unknown>
   ): Observable<unknown> | Promise<Observable<unknown>> {
-    const request = context.switchToHttp().getRequest() as IInternalRequest;
-    const frsys = request?.cookies?.['frsys'] ?? '';
+    const request = context.switchToHttp().getRequest<IInternalRequest>();
+    const domain: string = request?.cookies?.['domain'] ?? 'no-domain';
     const handler = context.getHandler().name;
     const type = context.getType();
     const className = context.getClass().name;
     const uuid: string = request.requestId ?? 'no-request-id';
-    const prefix = `[${uuid}:${frsys}][${handler}]:[${type}]`;
+    const prefix = `[${uuid}:${domain}][${handler}]:[${type}]`;
     Logger.log(
-      `${prefix}::Incomming Request \n Params ${JSON.stringify(
-        request.params
-      )} \n  Body ${JSON.stringify(request.body)} \n`,
+      `${prefix}::Incoming Request 
+      \n Params ${JSON.stringify(request.params)} 
+      \n  Body ${JSON.stringify(request.body)} \n`,
       className
     );
     const now = Date.now();
@@ -37,8 +37,7 @@ export class LoggingInterceptor implements NestInterceptor {
           );
         },
         error: (err) => {
-          Logger.error(`${prefix}:: Request error`, className);
-          Logger.error(err, className);
+          Logger.error(`${prefix}:: Request error`, err, className);
         },
       })
     );

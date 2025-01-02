@@ -9,7 +9,7 @@ export abstract class TypeOrmConfig {
         return {
           type: 'postgres',
           url: configService.get<string>('database.uri'),
-          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          entities: [__dirname + '/**/*.entity.{js,ts}'],
           cache: {
             type: 'redis',
             options: {
@@ -30,6 +30,7 @@ export abstract class TypeOrmConfig {
           verboseRetryLog: configService.get<boolean>('isDevelopment'),
           logging: configService.get<boolean>('isDevelopment'),
           synchronize: configService.get<boolean>('isDevelopment'),
+          autoLoadEntities: true
         } satisfies TypeOrmModuleOptions;
       },
     });
