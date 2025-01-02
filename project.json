@@ -40,6 +40,12 @@
         }
       }
     },
+    "generate-keys": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd ./keys && sh jwt-secret.sh && sh generator.sh && sh cookie-secret.sh"
+      }
+    },
     "test": {
       "options": {
         "passWithNoTests": true
